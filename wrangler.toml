@@ -1,0 +1,13 @@
+name = "tripit-emoji"
+main = "tripit-emoji-worker.js"
+compatibility_date = "2024-11-04"
+
+# Enable observability for monitoring
+[observability]
+enabled = true
+
+# Optional: Set up a custom domain
+# Uncomment and configure if you have a custom domain in Cloudflare
+# routes = [
+#   { pattern = "calendar.yourdomain.com", custom_domain = true }
+# ]
