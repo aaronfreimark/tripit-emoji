@@ -214,6 +214,18 @@ export default {
         );
       }
       
+      // Check for secret token (optional but recommended for security)
+      const url = new URL(request.url);
+      const token = url.searchParams.get('token');
+      const SECRET_TOKEN = env.SECRET_TOKEN;
+      
+      if (SECRET_TOKEN && token !== SECRET_TOKEN) {
+        return new Response('Unauthorized', {
+          status: 401,
+          headers: { 'Content-Type': 'text/plain' }
+        });
+      }
+      
       // Fetch the original TripIt ICS feed
       const response = await fetch(TRIPIT_FEED_URL);
       

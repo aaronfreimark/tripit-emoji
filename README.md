@@ -1,128 +1,159 @@
-# TripIt Calendar Emoji Enhancer
+# TripIt Calendar Emoji Enhancer ✈️🛎️🚘
 
-A Cloudflare Worker that adds visual emojis to your TripIt calendar feed, making it easier to distinguish between flights, hotels, car rentals, and parking at a glance.
+A Cloudflare Worker that adds visual emojis to your TripIt calendar feed, making it easier to distinguish between flights, hotels, car rentals, trains, and parking at a glance.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Cloudflare Workers](https://img.shields.io/badge/cloudflare-workers-orange.svg)
 
+## Table of Contents
+
+- [Features](#-features)
+- [Before & After](#-before--after)
+- [Quick Start](#-quick-start)
+- [Setup Instructions](#-setup-instructions)
+- [Using Your Calendar Feed](#-using-your-calendar-feed)
+- [Customization](#-customization)
+- [Security & Privacy](#-security--privacy)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+- [License](#-license)
+
 ## ✨ Features
 
-- ✈️ **Flights** - Automatically identified and marked with airplane emoji
+- ✈️ **Flights** - Special formatting: "EWR→ATL • DL2353"
+- 🚆 **Trains** - Amtrak and rail travel marked with train emoji
 - 🛎️ **Hotels** - Check-ins and check-outs marked with bell emoji
 - 🚘 **Car Rentals** - Pickup and drop-off events marked with car emoji
 - 🚙 **Parking** - Airport parking events marked with parking emoji
+- 🔒 **Secure** - Optional token-based URL protection
 - 🔄 **Real-time** - Updates propagate within 15 minutes
-- 💰 **Free** - Runs on Cloudflare's generous free tier
+- 💰 **Free** - Runs on Cloudflare's generous free tier (100k requests/day)
 - 🌍 **Global** - Edge caching for fast response times worldwide
 
 ## 📋 Before & After
 
 **Before:**
-```
-DL738 JFK to LAX
-Check-in: Burton House, Tribute Portfolio Hotel
-Pick Up Rental Car: National Car Rental
+
+```text
+DL2353 EWR to ATL
+Amtrak - New York, NY to Boston, MA
+Check-in: Hilton Garden Inn
+Pick Up Rental Car: National
 ```
 
 **After:**
-```
-✈️ DL738 JFK to LAX
-🛎️ Check-in: Burton House, Tribute Portfolio Hotel
-🚘 Pick Up Rental Car: National Car Rental
+
+```text
+✈️ EWR→ATL • DL2353
+🚆 Amtrak - New York, NY to Boston, MA
+🛎️ Check-in: Hilton Garden Inn
+🚘 Pick Up Rental Car: National
 ```
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### What You Need
 
-- A Cloudflare account (free tier works perfectly)
-- Your TripIt private calendar feed URL
+- A Cloudflare account (free tier works great - [sign up here](https://dash.cloudflare.com/sign-up))
+- Your TripIt private calendar feed URL ([get it from TripIt](https://www.tripit.com) → Account Settings → Calendar Feeds)
+- 10 minutes
 
-### Deployment Options
+## 📦 Setup Instructions
 
-#### Option 1: Deploy via Cloudflare Dashboard (Easiest & Most Secure)
+This worker uses Cloudflare environment variables to keep your private TripIt URL and security token separate from your code. Choose your preferred deployment method below.
 
-1. **Sign up for Cloudflare**
-   - Go to https://dash.cloudflare.com/sign-up
-   - Create a free account
+### Option A: Cloudflare Dashboard (Easiest)
 
-2. **Create a Worker**
-   - Click "Workers & Pages" → "Create Application" → "Create Worker"
-   - Name it `tripit-emoji` (or your preferred name)
+**Step 1: Create the Worker**
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com) (sign up for free if needed)
+2. Click "Workers & Pages" → "Create Application" → "Create Worker"
+3. Name it `tripit-emoji` and click "Deploy"
+4. Click "Edit Code"
+5. Delete the default code
+6. Copy the contents of `tripit-emoji-worker.js` from this repo
+7. Paste into the editor and click "Save and Deploy"
+
+**Step 2: Add Environment Variables**
+
+1. Click "Settings" tab
+2. Click "Variables and Secrets"
+3. Add `TRIPIT_FEED_URL`:
+   - Click "Add variable"
+   - Name: `TRIPIT_FEED_URL`
+   - Value: Your TripIt ICS feed URL (get from [TripIt.com](https://www.tripit.com) → Account Settings → Calendar Feeds)
+   - Check "Encrypt" (recommended)
+   - Click "Deploy"
+4. Add `SECRET_TOKEN` (recommended for security):
+   - Click "Add variable" again
+   - Name: `SECRET_TOKEN`
+   - Value: Create a random string (e.g., `openssl rand -hex 8`)
+   - Check "Encrypt" (recommended)
    - Click "Deploy"
 
-3. **Add the code**
-   - Click "Edit Code"
-   - Delete the default code
-   - Copy the contents of `tripit-emoji-worker.js`
-   - Paste into the editor
-   - Click "Save and Deploy"
+**Step 3: Get Your URL**
 
-4. **Add your TripIt URL securely**
-   - Click "Settings" tab
-   - Click "Variables and Secrets"
-   - Under "Environment Variables", click "Add variable"
-   - Set **Variable name:** `TRIPIT_FEED_URL`
-   - Set **Value:** Your TripIt ICS feed URL (from TripIt.com → Account Settings → Calendar Feeds)
-   - Choose "Encrypt" for extra security (recommended)
-   - Click "Deploy"
+Your calendar URL: `https://tripit-emoji.YOUR-SUBDOMAIN.workers.dev?token=YOUR-SECRET-TOKEN`
 
-5. **Get your URL**
-   - Your worker URL: `https://tripit-emoji.YOUR-SUBDOMAIN.workers.dev`
-   - Use this URL in your calendar app
+✅ **Done!** Your secrets are stored securely in Cloudflare, not in your code.
 
-✅ **Your TripIt URL is now stored securely and NOT in your code!**
+### Option B: Wrangler CLI (For Developers)
 
-#### Option 2: Deploy via Wrangler CLI (More Control & Secure)
+**Step 1: Install and Setup**
 
-1. **Install Wrangler**
-   ```bash
-   npm install -g wrangler
-   ```
+```bash
+# Install Wrangler
+npm install -g wrangler
 
-2. **Clone this repository**
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/tripit-emoji-worker.git
-   cd tripit-emoji-worker
-   ```
+# Clone this repository
+git clone https://github.com/aaronfreimark/tripit-emoji.git
+cd tripit-emoji
 
-3. **Setup local development (optional)**
-   ```bash
-   # Copy the example file
-   cp .dev.vars.example .dev.vars
-   
-   # Edit .dev.vars and add your TripIt feed URL
-   # This file is gitignored and won't be committed
-   ```
+# Login to Cloudflare
+wrangler login
+```
 
-4. **Login and set your secret**
-   ```bash
-   wrangler login
-   
-   # Set your TripIt URL as a secure secret
-   wrangler secret put TRIPIT_FEED_URL
-   # When prompted, paste your TripIt ICS feed URL
-   ```
+**Step 2: Configure Environment Variables**
 
-5. **Deploy**
-   ```bash
-   wrangler deploy
-   ```
+For local development:
 
-6. **Get your URL**
-   - Wrangler will output your worker URL after deployment
+```bash
+# Copy the example file
+cp .dev.vars.example .dev.vars
 
-✅ **Your TripIt URL is stored as an encrypted secret, not in your code!**
+# Edit .dev.vars with your values (gitignored - safe!)
+# Add your TRIPIT_FEED_URL and SECRET_TOKEN
+```
 
-### Finding Your TripIt Feed URL
+For production deployment:
 
-1. Log into TripIt.com
-2. Go to Account Settings → Calendar Feeds
-3. Copy your private iCal feed URL (format: `https://www.tripit.com/feed/ical/private/[YOUR-KEY]/tripit.ics`)
+```bash
+# Set your TripIt URL as an encrypted secret
+wrangler secret put TRIPIT_FEED_URL
+# Paste your TripIt ICS feed URL when prompted
 
-## 📱 Using Your New Calendar Feed
+# Set your security token
+wrangler secret put SECRET_TOKEN
+# Enter a random string when prompted (e.g., a7f9d2e4c8b1)
+```
 
-Once deployed, add your worker URL to your calendar app:
+**Step 3: Deploy**
+
+```bash
+# Test locally first (optional)
+wrangler dev
+
+# Deploy to production
+wrangler deploy
+```
+
+Your calendar URL: `https://tripit-emoji.YOUR-SUBDOMAIN.workers.dev?token=YOUR-SECRET-TOKEN`
+
+✅ **Your secrets are encrypted and never stored in your code!**
+
+## 📱 Using Your Calendar Feed
+
+Once deployed, subscribe to your worker URL in your calendar app:
 
 ### Apple Calendar (macOS/iOS)
 1. File → New Calendar Subscription (Mac) or Settings → Accounts → Add Account (iOS)
@@ -190,71 +221,96 @@ function getEventType(summary, description) {
 
 ## 🏗️ How It Works
 
-```
+```text
 ┌─────────────┐
 │ Calendar    │
-│ App         │
+│ App         │  1. Request with ?token=SECRET
 └──────┬──────┘
-       │ Request feed
+       │
        ↓
-┌─────────────────────────┐
-│ Cloudflare Worker       │
-│ (Your deployment)       │
-│                         │
-│ 1. Fetch TripIt feed   │
-│ 2. Parse ICS format    │
-│ 3. Identify event types│
-│ 4. Add emojis          │
-│ 5. Return modified ICS │
-└──────┬──────────────────┘
-       │ Fetch original
+┌──────────────────────────┐
+│ Cloudflare Worker        │
+│                          │
+│ 1. Verify token          │
+│ 2. Fetch from TripIt     │
+│ 3. Parse ICS             │
+│ 4. Add emojis            │
+│ 5. Return modified ICS   │
+└──────┬───────────────────┘
+       │
        ↓
 ┌─────────────┐
 │ TripIt      │
-│ ICS Feed    │
+│ Private URL │  (stored securely in env vars)
 └─────────────┘
 ```
 
-1. Your calendar app requests the feed from your Cloudflare Worker
-2. The worker fetches your TripIt ICS feed
-3. It parses the events and identifies types based on keywords
-4. It prepends appropriate emojis to event summaries
-5. It returns the modified ICS feed with a 15-minute cache
-6. Your calendar app displays the emoji-enhanced events
+**The Flow:**
 
-## 🔒 Privacy & Security
+1. Calendar app requests feed with token: `https://your-worker.dev?token=SECRET`
+2. Worker validates token against `SECRET_TOKEN` environment variable
+3. Worker fetches your private TripIt feed using `TRIPIT_FEED_URL` environment variable
+4. Worker parses ICS format and identifies event types
+5. Worker adds emojis (flights get special formatting: "EWR→ATL • DL2353")
+6. Worker returns modified ICS with 15-minute cache header
+7. Calendar app displays emoji-enhanced events
 
-### Secure Setup
-
-This worker uses **Cloudflare environment variables** to store your private TripIt feed URL, keeping it separate from your code. This means:
-
-- ✅ Safe to push to public GitHub repositories
-- ✅ Your private URL is encrypted in Cloudflare
-- ✅ No secrets in your code or Git history
-- ✅ Easy to update without changing code
+## 🔒 Security & Privacy
 
 ### How It Works
 
-The worker reads your TripIt URL from the `TRIPIT_FEED_URL` environment variable, which you set:
-- Via Cloudflare Dashboard: Settings → Variables and Secrets
-- Via Wrangler CLI: `wrangler secret put TRIPIT_FEED_URL`
+This worker uses **Cloudflare environment variables** to keep your private data secure:
 
-For local development, create a `.dev.vars` file (gitignored) with your URL.
+- ✅ **Secrets stored securely** - Your TripIt URL and token are encrypted in Cloudflare
+- ✅ **Safe for GitHub** - No private data in your code or Git history
+- ✅ **URL protection** - Optional `SECRET_TOKEN` prevents unauthorized access
+- ✅ **Easy updates** - Change secrets without modifying code
 
-### Data Handling
+### Required Environment Variables
 
-- Your TripIt feed URL is embedded in the worker code
-- Calendar data passes through Cloudflare's edge network but is **not stored**
-- The worker processes data in-memory only
-- Results are cached at the edge for 15 minutes for performance
-- Treat your Worker URL with the same privacy as your TripIt feed URL
+**`TRIPIT_FEED_URL`** (required)
+- Your private TripIt ICS feed URL
+- Get from: TripIt.com → Account Settings → Calendar Feeds
+- Stored encrypted in Cloudflare
+
+**`SECRET_TOKEN`** (strongly recommended)
+- A random string to protect your worker URL
+- Without it, anyone with your worker URL can access your calendar
+- With it, requests need `?token=YOUR-SECRET-TOKEN` in the URL
+- Generate with: `openssl rand -hex 8`
+
+### URL Security
+
+Without token (not recommended):
+
+```text
+https://tripit-emoji.YOUR-NAME.workers.dev
+```
+
+With token (recommended):
+
+```text
+https://tripit-emoji.YOUR-NAME.workers.dev?token=a7f9d2e4c8b1
+```
+
+If the token doesn't match or is missing when `SECRET_TOKEN` is set, the worker returns `401 Unauthorized`.
+
+### Data Privacy
+
+- Calendar data passes through Cloudflare's edge network but is **never stored**
+- Processing happens in-memory only
+- Results are cached for 15 minutes for performance
+- Your TripIt URL never appears in your code
 
 ### Best Practices
 
-1. **Never commit `.dev.vars`** - It's in `.gitignore` for your safety
-2. **Use encrypted variables** - Choose "Encrypt" option in Cloudflare dashboard
-3. **Rotate your TripIt URL** - If exposed, regenerate it in TripIt settings
-4. **Keep worker URL private** - Share only with trusted calendar apps
+1. ✅ **Always use `SECRET_TOKEN`** - Prevents unauthorized access
+2. ✅ **Use "Encrypt" option** - When adding variables in Cloudflare dashboard
+3. ✅ **Generate random tokens** - Use `openssl rand -hex 8` or similar
+4. ✅ **Never commit `.dev.vars`** - It's already in `.gitignore`
+5. ✅ **Keep URL + token private** - Treat like a password
+6. ✅ **Rotate periodically** - Change tokens if you suspect exposure
+7. ✅ **Regenerate if exposed** - Both TripIt URL (in TripIt settings) and token
 
 ## 📊 Monitoring
 
@@ -290,13 +346,54 @@ In the Cloudflare dashboard:
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Here's how to contribute:
+
+### Reporting Bugs
+
+Open an issue with:
+
+- Clear description of the problem
+- Steps to reproduce
+- Expected vs actual behavior
+- Environment details (calendar app, etc.)
+
+### Suggesting Features
+
+Open an issue describing:
+
+- The feature you'd like
+- Why it would be useful
+- How it might work
+
+### Contributing Code
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/new-emoji-type`)
+3. Make your changes
+4. Test locally with `wrangler dev`
+5. Commit with clear messages (`git commit -m 'Add restaurant emoji support'`)
+6. Push and open a Pull Request
+
+### Adding New Event Types
+
+To add a new emoji type:
+
+1. Add to the `EMOJIS` object
+2. Add detection logic to `getEventType()`
+3. Test thoroughly
+4. Update documentation
+
+Example:
+
+```javascript
+// In EMOJIS object
+RESTAURANT: '🍽️'
+
+// In getEventType()
+if (summaryLower.includes('dinner') || summaryLower.includes('restaurant')) {
+  return 'RESTAURANT';
+}
+```
 
 ## 📝 License
 
@@ -317,11 +414,14 @@ If you encounter issues:
 
 ## 🗺️ Roadmap
 
-Potential future enhancements:
-- [ ] Environment variable for TripIt feed URL
+- [x] Environment variables for secure configuration
+- [x] Security token for URL protection
+- [x] Train/rail event detection
+- [x] Special flight formatting (EWR→ATL • DL2353)
 - [ ] Support for multiple TripIt accounts
+- [ ] Restaurant/dining event detection
+- [ ] Meeting/conference event detection
 - [ ] Custom domain support
-- [ ] More event type detection (trains, restaurants, meetings)
 - [ ] Configuration UI
 - [ ] Webhook notifications for trip updates
 

@@ -1,0 +1,12 @@
+# Example environment variables for local development with Wrangler
+# Copy this file to .dev.vars and fill in your actual values
+# IMPORTANT: .dev.vars is gitignored - never commit it!
+
+# Your private TripIt ICS feed URL (required)
+# Get this from: TripIt.com → Account Settings → Calendar Feeds
+TRIPIT_FEED_URL=https://www.tripit.com/feed/ical/private/YOUR-KEY-HERE/tripit.ics
+
+# Security token to protect your worker URL (recommended)
+# Create a random string - example: openssl rand -hex 8
+# If set, you must include ?token=YOUR-TOKEN in your calendar URL
+SECRET_TOKEN=your-random-token-here
