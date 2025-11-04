@@ -134,9 +134,14 @@ function processICS(icsContent) {
     }
     
     if (inEvent) {
-      // Collect SUMMARY
+      // Collect SUMMARY (may span multiple lines due to folding)
       if (line.startsWith('SUMMARY:')) {
         currentSummary = line;
+        continue; // Don't add yet, process later
+      } else if (currentSummary && line.startsWith(' ') && !currentDescription) {
+        // Continuation line for SUMMARY (RFC 5545 line folding)
+        currentSummary += '\r\n' + line;
+        continue;
       }
       
       // Collect DESCRIPTION (may span multiple lines due to folding)
@@ -145,13 +150,6 @@ function processICS(icsContent) {
       } else if (currentDescription && line.startsWith(' ')) {
         // Continuation line (RFC 5545 line folding)
         currentDescription += line.substring(1);
-      }
-      
-      // When we hit SUMMARY, we need to look ahead to get the description
-      // So we'll process the SUMMARY later
-      if (line.startsWith('SUMMARY:')) {
-        // Store it but don't add yet
-        continue;
       }
       
       // When we're done collecting info for this event property, process SUMMARY
