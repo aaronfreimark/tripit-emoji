@@ -66,25 +66,37 @@ function getEventType(summary, description) {
  * Adds emoji to the beginning of a SUMMARY line
  */
 function addEmojiToSummary(line, emoji, eventType) {
-  const match = line.match(/^SUMMARY:(.*)$/);
+  // Handle multi-line summaries (folded per RFC 5545)
+  const lines = line.split(/\r?\n/);
+  const firstLine = lines[0];
+  const match = firstLine.match(/^SUMMARY:(.*)$/);
+  
   if (match) {
-    const originalSummary = match[1];
+    // Unfold to get complete summary text
+    const unfoldedSummary = line.replace(/\r?\n /g, '').substring(8); // Remove "SUMMARY:" and unfold
+    
     // Check if emoji already exists to avoid double-adding
-    if (originalSummary.startsWith(emoji)) {
+    if (unfoldedSummary.startsWith(emoji)) {
       return line;
     }
     
     // Special formatting for flights: ✈️ EWR→ATL • DL2353
     if (eventType === 'FLIGHT') {
-      const flightMatch = originalSummary.match(/^([A-Z]{2,3}\d{2,4})\s+([A-Z]{3})\s+to\s+([A-Z]{3})/i);
+      const flightMatch = unfoldedSummary.match(/^([A-Z]{2,3}\d{2,4})\s+([A-Z]{3})\s+to\s+([A-Z]{3})/i);
       if (flightMatch) {
         const [, flightNumber, origin, destination] = flightMatch;
         return `SUMMARY:${emoji} ${origin}→${destination} • ${flightNumber}`;
       }
     }
     
-    // Default: just prepend emoji
-    return `SUMMARY:${emoji} ${originalSummary}`;
+    // Default: just prepend emoji (keep original folding)
+    if (lines.length > 1) {
+      // Multi-line: add emoji to first line, keep rest as-is
+      return `SUMMARY:${emoji} ${match[1]}\r\n${lines.slice(1).join('\r\n')}`;
+    } else {
+      // Single line
+      return `SUMMARY:${emoji} ${unfoldedSummary}`;
+    }
   }
   return line;
 }
@@ -117,7 +129,7 @@ function processICS(icsContent) {
     if (line === 'END:VEVENT') {
       // If we have an unprocessed summary, add it now (with or without emoji)
       if (currentSummary) {
-        const summaryText = currentSummary.substring(8); // Remove "SUMMARY:"
+        const summaryText = currentSummary.replace(/\r?\n /g, '').substring(8); // Remove "SUMMARY:" and unfold
         eventType = getEventType(summaryText, currentDescription);
         
         if (eventType && EMOJIS[eventType]) {
@@ -154,8 +166,8 @@ function processICS(icsContent) {
       
       // When we're done collecting info for this event property, process SUMMARY
       if (currentSummary && (line.startsWith('LOCATION:') || line.startsWith('UID:') || line.startsWith('DTSTART') || line.startsWith('DESCRIPTION:'))) {
-        // Determine event type
-        const summaryText = currentSummary.substring(8); // Remove "SUMMARY:"
+        // Determine event type - unfold the summary text for analysis
+        const summaryText = currentSummary.replace(/\r?\n /g, '').substring(8); // Remove "SUMMARY:" and unfold
         eventType = getEventType(summaryText, currentDescription);
         
         // Add emoji if we identified the type
