@@ -57,14 +57,26 @@ function getEventType(summary, description) {
 /**
  * Adds emoji to the beginning of a SUMMARY line
  */
-function addEmojiToSummary(line, emoji) {
+function addEmojiToSummary(line, emoji, eventType) {
   const match = line.match(/^SUMMARY:(.*)$/);
   if (match) {
     const originalSummary = match[1];
     // Check if emoji already exists to avoid double-adding
-    if (!originalSummary.startsWith(emoji)) {
-      return `SUMMARY:${emoji} ${originalSummary}`;
+    if (originalSummary.startsWith(emoji)) {
+      return line;
     }
+    
+    // Special formatting for flights: ✈️ EWR → ATL • DL2353
+    if (eventType === 'FLIGHT') {
+      const flightMatch = originalSummary.match(/^([A-Z]{2,3}\d{2,4})\s+([A-Z]{3})\s+to\s+([A-Z]{3})/i);
+      if (flightMatch) {
+        const [, flightNumber, origin, destination] = flightMatch;
+        return `SUMMARY:${emoji} ${origin} → ${destination} • ${flightNumber}`;
+      }
+    }
+    
+    // Default: just prepend emoji
+    return `SUMMARY:${emoji} ${originalSummary}`;
   }
   return line;
 }
@@ -129,7 +141,7 @@ function processICS(icsContent) {
         
         // Add emoji if we identified the type
         if (eventType && EMOJIS[eventType]) {
-          processedLines.push(addEmojiToSummary(currentSummary, EMOJIS[eventType]));
+          processedLines.push(addEmojiToSummary(currentSummary, EMOJIS[eventType], eventType));
         } else {
           processedLines.push(currentSummary);
         }
