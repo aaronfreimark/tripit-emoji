@@ -66,12 +66,12 @@ function addEmojiToSummary(line, emoji, eventType) {
       return line;
     }
     
-    // Special formatting for flights: ✈️ EWR → ATL • DL2353
+    // Special formatting for flights: ✈️ EWR→ATL • DL2353
     if (eventType === 'FLIGHT') {
       const flightMatch = originalSummary.match(/^([A-Z]{2,3}\d{2,4})\s+([A-Z]{3})\s+to\s+([A-Z]{3})/i);
       if (flightMatch) {
         const [, flightNumber, origin, destination] = flightMatch;
-        return `SUMMARY:${emoji} ${origin} → ${destination} • ${flightNumber}`;
+        return `SUMMARY:${emoji} ${origin}→${destination} • ${flightNumber}`;
       }
     }
     
