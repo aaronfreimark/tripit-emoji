@@ -107,6 +107,19 @@ function processICS(icsContent) {
     }
     
     if (line === 'END:VEVENT') {
+      // If we have an unprocessed summary, add it now (with or without emoji)
+      if (currentSummary) {
+        const summaryText = currentSummary.substring(8); // Remove "SUMMARY:"
+        eventType = getEventType(summaryText, currentDescription);
+        
+        if (eventType && EMOJIS[eventType]) {
+          processedLines.push(addEmojiToSummary(currentSummary, EMOJIS[eventType], eventType));
+        } else {
+          processedLines.push(currentSummary);
+        }
+        currentSummary = null;
+      }
+      
       inEvent = false;
       processedLines.push(line);
       continue;
