@@ -155,7 +155,7 @@ function processICS(icsContent) {
       }
       
       // When we're done collecting info for this event property, process SUMMARY
-      if (currentSummary && (line.startsWith('LOCATION:') || line.startsWith('UID:') || line.startsWith('DTSTART'))) {
+      if (currentSummary && (line.startsWith('LOCATION:') || line.startsWith('UID:') || line.startsWith('DTSTART') || line.startsWith('DESCRIPTION:'))) {
         // Determine event type
         const summaryText = currentSummary.substring(8); // Remove "SUMMARY:"
         eventType = getEventType(summaryText, currentDescription);
