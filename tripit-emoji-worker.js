@@ -3,11 +3,11 @@
  * 
  * This worker fetches a TripIt ICS feed, identifies event types,
  * and prepends appropriate emojis to event summaries.
+ * 
+ * Required environment variable:
+ * - TRIPIT_FEED_URL: Your private TripIt ICS feed URL
+ *   Set this in Cloudflare Dashboard > Workers > Settings > Variables and Secrets
  */
-
-// TODO: Replace with your private TripIt feed URL
-// Get this from: TripIt.com → Account Settings → Calendar Feeds
-const TRIPIT_FEED_URL = 'YOUR-TRIPIT-FEED-URL-HERE';
 
 // Emoji mappings
 const EMOJIS = {
@@ -58,8 +58,6 @@ function getEventType(summary, description) {
  * Adds emoji to the beginning of a SUMMARY line
  */
 function addEmojiToSummary(line, emoji) {
-  // SUMMARY lines look like: SUMMARY:Event Name
-  // We want to change it to: SUMMARY:✈️ Event Name
   const match = line.match(/^SUMMARY:(.*)$/);
   if (match) {
     const originalSummary = match[1];
@@ -152,6 +150,27 @@ function processICS(icsContent) {
 export default {
   async fetch(request, env, ctx) {
     try {
+      // Get TripIt feed URL from environment variable
+      const TRIPIT_FEED_URL = env.TRIPIT_FEED_URL;
+      
+      // Validate that the environment variable is set
+      if (!TRIPIT_FEED_URL) {
+        return new Response(
+          'Error: TRIPIT_FEED_URL environment variable is not set.\n\n' +
+          'Please add it in the Cloudflare dashboard:\n' +
+          '1. Go to Workers & Pages > Your Worker > Settings\n' +
+          '2. Click "Variables and Secrets"\n' +
+          '3. Add variable: TRIPIT_FEED_URL\n' +
+          '4. Paste your TripIt ICS feed URL\n' +
+          '5. Click "Encrypt" (recommended) and "Deploy"\n\n' +
+          'Or use Wrangler CLI: wrangler secret put TRIPIT_FEED_URL',
+          {
+            status: 500,
+            headers: { 'Content-Type': 'text/plain' }
+          }
+        );
+      }
+      
       // Fetch the original TripIt ICS feed
       const response = await fetch(TRIPIT_FEED_URL);
       

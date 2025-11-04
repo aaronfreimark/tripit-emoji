@@ -40,7 +40,7 @@ Pick Up Rental Car: National Car Rental
 
 ### Deployment Options
 
-#### Option 1: Deploy via Cloudflare Dashboard (Easiest)
+#### Option 1: Deploy via Cloudflare Dashboard (Easiest & Most Secure)
 
 1. **Sign up for Cloudflare**
    - Go to https://dash.cloudflare.com/sign-up
@@ -56,14 +56,24 @@ Pick Up Rental Car: National Car Rental
    - Delete the default code
    - Copy the contents of `tripit-emoji-worker.js`
    - Paste into the editor
-   - **Important:** Update the `TRIPIT_FEED_URL` with your private TripIt feed URL
    - Click "Save and Deploy"
 
-4. **Get your URL**
+4. **Add your TripIt URL securely**
+   - Click "Settings" tab
+   - Click "Variables and Secrets"
+   - Under "Environment Variables", click "Add variable"
+   - Set **Variable name:** `TRIPIT_FEED_URL`
+   - Set **Value:** Your TripIt ICS feed URL (from TripIt.com → Account Settings → Calendar Feeds)
+   - Choose "Encrypt" for extra security (recommended)
+   - Click "Deploy"
+
+5. **Get your URL**
    - Your worker URL: `https://tripit-emoji.YOUR-SUBDOMAIN.workers.dev`
    - Use this URL in your calendar app
 
-#### Option 2: Deploy via Wrangler CLI
+✅ **Your TripIt URL is now stored securely and NOT in your code!**
+
+#### Option 2: Deploy via Wrangler CLI (More Control & Secure)
 
 1. **Install Wrangler**
    ```bash
@@ -76,18 +86,33 @@ Pick Up Rental Car: National Car Rental
    cd tripit-emoji-worker
    ```
 
-3. **Update the TripIt feed URL**
-   - Edit `tripit-emoji-worker.js`
-   - Replace `TRIPIT_FEED_URL` with your private TripIt feed URL
+3. **Setup local development (optional)**
+   ```bash
+   # Copy the example file
+   cp .dev.vars.example .dev.vars
+   
+   # Edit .dev.vars and add your TripIt feed URL
+   # This file is gitignored and won't be committed
+   ```
 
-4. **Login and deploy**
+4. **Login and set your secret**
    ```bash
    wrangler login
+   
+   # Set your TripIt URL as a secure secret
+   wrangler secret put TRIPIT_FEED_URL
+   # When prompted, paste your TripIt ICS feed URL
+   ```
+
+5. **Deploy**
+   ```bash
    wrangler deploy
    ```
 
-5. **Get your URL**
+6. **Get your URL**
    - Wrangler will output your worker URL after deployment
+
+✅ **Your TripIt URL is stored as an encrypted secret, not in your code!**
 
 ### Finding Your TripIt Feed URL
 
@@ -199,11 +224,37 @@ function getEventType(summary, description) {
 
 ## 🔒 Privacy & Security
 
+### Secure Setup
+
+This worker uses **Cloudflare environment variables** to store your private TripIt feed URL, keeping it separate from your code. This means:
+
+- ✅ Safe to push to public GitHub repositories
+- ✅ Your private URL is encrypted in Cloudflare
+- ✅ No secrets in your code or Git history
+- ✅ Easy to update without changing code
+
+### How It Works
+
+The worker reads your TripIt URL from the `TRIPIT_FEED_URL` environment variable, which you set:
+- Via Cloudflare Dashboard: Settings → Variables and Secrets
+- Via Wrangler CLI: `wrangler secret put TRIPIT_FEED_URL`
+
+For local development, create a `.dev.vars` file (gitignored) with your URL.
+
+### Data Handling
+
 - Your TripIt feed URL is embedded in the worker code
 - Calendar data passes through Cloudflare's edge network but is **not stored**
 - The worker processes data in-memory only
 - Results are cached at the edge for 15 minutes for performance
 - Treat your Worker URL with the same privacy as your TripIt feed URL
+
+### Best Practices
+
+1. **Never commit `.dev.vars`** - It's in `.gitignore` for your safety
+2. **Use encrypted variables** - Choose "Encrypt" option in Cloudflare dashboard
+3. **Rotate your TripIt URL** - If exposed, regenerate it in TripIt settings
+4. **Keep worker URL private** - Share only with trusted calendar apps
 
 ## 📊 Monitoring
 
