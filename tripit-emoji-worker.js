@@ -15,7 +15,8 @@ const EMOJIS = {
   HOTEL: '🛎️',
   CAR_RENTAL: '🚘',
   PARKING: '🚙',
-  TRAIN: '🚆'
+  TRAIN: '🚆',
+  FERRY: '⛴️'
 };
 
 /**
@@ -28,6 +29,11 @@ function getEventType(summary, description) {
   // Check for parking first (most specific)
   if (summaryLower.includes('parking') || descriptionLower.includes('[parking]')) {
     return 'PARKING';
+  }
+  
+  // Check for ferry
+  if (descriptionLower.includes('[ferry]')) {
+    return 'FERRY';
   }
   
   // Check for train/rail
