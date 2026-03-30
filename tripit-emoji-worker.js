@@ -23,45 +23,32 @@ const EMOJIS = {
  * Determines the event type based on summary and description
  */
 function getEventType(summary, description) {
-  const summaryLower = summary.toLowerCase();
-  const descriptionLower = description.toLowerCase();
+  const text = (summary + ' ' + description).toLowerCase();
   
-  // Check for parking first (most specific)
-  if (summaryLower.includes('parking') || descriptionLower.includes('[parking]')) {
+  if (text.includes('parking')) {
     return 'PARKING';
   }
   
-  // Check for ferry
-  if (descriptionLower.includes('[ferry]')) {
+  if (text.includes('[ferry]')) {
     return 'FERRY';
   }
   
-  // Check for train/rail
-  if (summaryLower.includes('amtrak') || 
-      summaryLower.includes('train hall') ||
-      descriptionLower.includes('[rail]')) {
+  if (text.includes('amtrak') || text.includes('train hall') || text.includes('[rail]')) {
     return 'TRAIN';
   }
   
-  // Check for car rental
-  if (summaryLower.includes('rental car') || 
-      summaryLower.includes('pick up rental') || 
-      summaryLower.includes('drop off rental') ||
-      descriptionLower.includes('[car rental]')) {
+  if (text.includes('rental car') || text.includes('pick up rental') || 
+      text.includes('drop off rental') || text.includes('[car rental]')) {
     return 'CAR_RENTAL';
   }
   
-  // Check for hotel/lodging
-  if (summaryLower.includes('check-in:') || 
-      summaryLower.includes('check-out:') ||
-      descriptionLower.includes('[lodging]')) {
+  if (text.includes('check-in:') || text.includes('check-out:') || text.includes('[lodging]')) {
     return 'HOTEL';
   }
   
-  // Check for flights - look for flight patterns
-  if (descriptionLower.includes('[flight]') || 
+  if (text.includes('[flight]') || 
       /\b[A-Z]{2,3}\d{2,4}\b/.test(summary) || // Flight numbers like DL738
-      (summaryLower.includes(' to ') && /\b[A-Z]{3}\b/.test(summary))) { // Airport codes
+      (text.includes(' to ') && /\b[A-Z]{3}\b/.test(summary))) { // Airport codes
     return 'FLIGHT';
   }
   
