@@ -142,7 +142,7 @@ function processICS(icsContent) {
       // Collect SUMMARY (may span multiple lines due to folding)
       if (line.startsWith('SUMMARY:')) {
         currentSummary = line;
-        continue; // Don't add yet, process later
+        continue; // Don't add yet, emit at END:VEVENT
       } else if (currentSummary && line.startsWith(' ') && !currentDescription) {
         // Continuation line for SUMMARY (RFC 5545 line folding)
         currentSummary += '\r\n' + line;
@@ -155,22 +155,6 @@ function processICS(icsContent) {
       } else if (currentDescription && line.startsWith(' ')) {
         // Continuation line (RFC 5545 line folding)
         currentDescription += line.substring(1);
-      }
-      
-      // When we're done collecting info for this event property, process SUMMARY
-      if (currentSummary && (line.startsWith('LOCATION:') || line.startsWith('UID:') || line.startsWith('DTSTART') || line.startsWith('DESCRIPTION:'))) {
-        // Determine event type - unfold the summary text for analysis
-        const summaryText = currentSummary.replace(/\r?\n /g, '').substring(8); // Remove "SUMMARY:" and unfold
-        eventType = getEventType(summaryText, currentDescription);
-        
-        // Add emoji if we identified the type
-        if (eventType && EMOJIS[eventType]) {
-          processedLines.push(addEmojiToSummary(currentSummary, EMOJIS[eventType], eventType));
-        } else {
-          processedLines.push(currentSummary);
-        }
-        
-        currentSummary = null; // Mark as processed
       }
     }
     
